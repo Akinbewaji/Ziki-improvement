@@ -1,0 +1,1537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ziki Agent Fleet Control | Real-Time Budget Gauge & Window Countdown</title>
+  <meta name="description" content="Real-time agent rate-limit budget gauge, live 1-hour rolling window countdown, and high-volume quota management for the Ziki autonomous issue platform.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #080c14;
+      --surface-1: #0f172a;
+      --surface-2: #1e293b;
+      --surface-3: #273549;
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-active: rgba(45, 212, 191, 0.35);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --teal-primary: #14b8a6;
+      --teal-glow: rgba(20, 184, 166, 0.25);
+      --teal-hover: #0d9488;
+      --emerald: #10b981;
+      --emerald-glow: rgba(16, 185, 129, 0.2);
+      --amber: #f59e0b;
+      --amber-glow: rgba(245, 158, 11, 0.2);
+      --rose: #f43f5e;
+      --rose-glow: rgba(244, 63, 94, 0.25);
+      --indigo: #6366f1;
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-full: 9999px;
+      --shadow-card: 0 10px 30px -10px rgba(0, 0, 0, 0.5), 0 0 1px 1px rgba(255, 255, 255, 0.05);
+      --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      min-height: 100vh;
+      line-height: 1.5;
+      padding-bottom: 60px;
+      overflow-x: hidden;
+      background-image: 
+        radial-gradient(circle at 15% 10%, rgba(20, 184, 166, 0.07) 0%, transparent 40%),
+        radial-gradient(circle at 85% 30%, rgba(99, 102, 241, 0.06) 0%, transparent 45%),
+        linear-gradient(to bottom, rgba(8, 12, 20, 0.8), rgba(8, 12, 20, 1));
+      background-attachment: fixed;
+    }
+
+    /* Top Navigation Bar */
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 36px;
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border-subtle);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-logo {
+      width: 34px;
+      height: 34px;
+      background: linear-gradient(135deg, #14b8a6, #06b6d4);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 16px var(--teal-glow);
+    }
+
+    .brand-logo svg {
+      width: 20px;
+      height: 20px;
+      fill: #ffffff;
+    }
+
+    .brand-name {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      font-size: 1.35rem;
+      letter-spacing: -0.02em;
+      color: #fff;
+    }
+
+    .project-pill {
+      font-size: 0.8rem;
+      padding: 4px 10px;
+      background: var(--surface-2);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-full);
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .project-pill b {
+      color: var(--teal-primary);
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .owner-info {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      text-align: right;
+    }
+
+    .owner-info span {
+      display: block;
+      color: var(--text-main);
+      font-weight: 600;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+    }
+
+    .btn-admin-gate {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(20, 184, 166, 0.15));
+      border: 1px solid rgba(99, 102, 241, 0.4);
+      color: #c7d2fe;
+      padding: 7px 14px;
+      border-radius: var(--radius-md);
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-admin-gate:hover {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.3), rgba(20, 184, 166, 0.3));
+      border-color: #818cf8;
+      box-shadow: 0 0 16px rgba(99, 102, 241, 0.3);
+      transform: translateY(-1px);
+    }
+
+    /* Container */
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 32px 24px;
+    }
+
+    /* Header Banner */
+    .dashboard-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 28px;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .header-title-wrap h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 2.1rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 6px;
+      background: linear-gradient(135deg, #ffffff 40%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .header-title-wrap p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      max-width: 650px;
+    }
+
+    .live-feed-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      padding: 6px 14px;
+      border-radius: var(--radius-full);
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--emerald);
+    }
+
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--emerald);
+      box-shadow: 0 0 8px var(--emerald);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      50% { transform: scale(1.3); opacity: 1; }
+      100% { transform: scale(0.95); opacity: 0.8; }
+    }
+
+    /* Fleet Summary Strip */
+    .fleet-summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .stat-card {
+      background: var(--surface-1);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      box-shadow: var(--shadow-card);
+      position: relative;
+      overflow: hidden;
+      transition: var(--transition);
+    }
+
+    .stat-card:hover {
+      border-color: rgba(255, 255, 255, 0.15);
+      transform: translateY(-2px);
+    }
+
+    .stat-card::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: linear-gradient(90deg, var(--teal-primary), transparent);
+    }
+
+    .stat-label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 6px;
+    }
+
+    .stat-value {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+
+    .stat-subtext {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* Main Workspace Layout */
+    .dashboard-layout {
+      display: grid;
+      grid-template-columns: 1fr 420px;
+      gap: 28px;
+    }
+
+    @media (max-width: 1100px) {
+      .dashboard-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Filter & Section Bar */
+    .section-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+
+    .section-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .count-chip {
+      background: var(--surface-2);
+      border: 1px solid var(--border-subtle);
+      font-size: 0.75rem;
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+      color: var(--text-muted);
+    }
+
+    /* Agent Card Grid */
+    .agents-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .agent-card {
+      background: var(--surface-1);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 22px 24px;
+      box-shadow: var(--shadow-card);
+      transition: var(--transition);
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .agent-card.selected {
+      border-color: var(--teal-primary);
+      box-shadow: 0 0 20px rgba(20, 184, 166, 0.15), var(--shadow-card);
+      background: linear-gradient(145deg, #101a2e 0%, #0f172a 100%);
+    }
+
+    .agent-card:hover:not(.selected) {
+      border-color: rgba(255, 255, 255, 0.16);
+      transform: translateY(-2px);
+    }
+
+    .agent-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+
+    .agent-identity {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .agent-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--surface-2);
+      border: 2px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.05rem;
+      color: var(--teal-primary);
+      position: relative;
+    }
+
+    .status-indicator {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: 2px solid var(--surface-1);
+      background: var(--emerald);
+    }
+
+    .status-indicator.throttled {
+      background: var(--rose);
+      box-shadow: 0 0 8px var(--rose);
+    }
+
+    .status-indicator.idle {
+      background: var(--amber);
+    }
+
+    .agent-meta h3 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .role-badge {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      padding: 2px 7px;
+      border-radius: 4px;
+      letter-spacing: 0.04em;
+    }
+
+    .role-badge.reviewer {
+      background: rgba(20, 184, 166, 0.15);
+      color: var(--teal-primary);
+      border: 1px solid rgba(20, 184, 166, 0.3);
+    }
+
+    .role-badge.triager {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--amber);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .agent-id-tag {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Tier & Status Badges */
+    .tier-badges {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .tier-chip {
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: var(--radius-full);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .tier-chip.standard {
+      background: rgba(148, 163, 184, 0.1);
+      color: var(--text-muted);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+    }
+
+    .tier-chip.high-volume {
+      background: linear-gradient(135deg, rgba(20, 184, 166, 0.2), rgba(99, 102, 241, 0.2));
+      color: #5eead4;
+      border: 1px solid rgba(45, 212, 191, 0.4);
+      box-shadow: 0 0 10px rgba(20, 184, 166, 0.2);
+    }
+
+    .state-badge {
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: var(--radius-full);
+    }
+
+    .state-badge.active {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--emerald);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .state-badge.sleeping {
+      background: rgba(244, 63, 94, 0.15);
+      color: #fda4af;
+      border: 1px solid rgba(244, 63, 94, 0.3);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    /* Budget & Countdown Dual Gauges */
+    .gauges-row {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: 20px;
+      align-items: center;
+      background: rgba(0, 0, 0, 0.25);
+      border-radius: var(--radius-md);
+      padding: 16px 20px;
+      border: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    @media (max-width: 768px) {
+      .gauges-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .gauge-block {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .gauge-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      font-size: 0.82rem;
+    }
+
+    .gauge-title {
+      font-weight: 600;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .gauge-numbers {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: #fff;
+    }
+
+    .gauge-numbers small {
+      color: var(--text-dim);
+      font-size: 0.78rem;
+    }
+
+    .progress-bar-wrap {
+      width: 100%;
+      height: 10px;
+      background: var(--surface-2);
+      border-radius: var(--radius-full);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      border-radius: var(--radius-full);
+      transition: width 0.4s ease, background 0.4s ease;
+    }
+
+    .progress-bar-fill.normal {
+      background: linear-gradient(90deg, #14b8a6, #2dd4bf);
+      box-shadow: 0 0 10px var(--teal-glow);
+    }
+
+    .progress-bar-fill.warning {
+      background: linear-gradient(90deg, #f59e0b, #fbbf24);
+      box-shadow: 0 0 10px var(--amber-glow);
+    }
+
+    .progress-bar-fill.critical {
+      background: linear-gradient(90deg, #f43f5e, #fb7185);
+      box-shadow: 0 0 10px var(--rose-glow);
+    }
+
+    /* Countdown Display Component */
+    .countdown-widget {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: rgba(15, 23, 42, 0.6);
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .mini-timer-svg {
+      width: 36px;
+      height: 36px;
+      transform: rotate(-90deg);
+    }
+
+    .mini-timer-bg {
+      fill: none;
+      stroke: var(--surface-2);
+      stroke-width: 3.5;
+    }
+
+    .mini-timer-progress {
+      fill: none;
+      stroke: var(--teal-primary);
+      stroke-width: 3.5;
+      stroke-linecap: round;
+      stroke-dasharray: 100;
+      stroke-dashoffset: 25;
+      transition: stroke-dashoffset 0.8s ease, stroke 0.4s ease;
+    }
+
+    .timer-text-wrap {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .timer-label {
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .timer-countdown {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: -0.02em;
+    }
+
+    .timer-countdown.imminent {
+      color: var(--amber);
+    }
+
+    .timer-countdown.exhausted {
+      color: var(--rose);
+      animation: flash 1.5s infinite;
+    }
+
+    @keyframes flash {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+
+    /* Detail / Inspector Panel */
+    .inspector-panel {
+      background: var(--surface-1);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 28px 24px;
+      box-shadow: var(--shadow-card);
+      position: sticky;
+      top: 90px;
+      height: fit-content;
+    }
+
+    .inspector-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .inspector-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    /* Radial Master Gauge */
+    .radial-gauge-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin: 20px 0 28px;
+      position: relative;
+    }
+
+    .radial-svg {
+      width: 220px;
+      height: 220px;
+      transform: rotate(-90deg);
+    }
+
+    .radial-bg {
+      fill: none;
+      stroke: var(--surface-2);
+      stroke-width: 14;
+    }
+
+    .radial-time-ring {
+      fill: none;
+      stroke: rgba(99, 102, 241, 0.25);
+      stroke-width: 6;
+      stroke-linecap: round;
+      stroke-dasharray: 565;
+      stroke-dashoffset: 140;
+    }
+
+    .radial-budget-ring {
+      fill: none;
+      stroke: var(--teal-primary);
+      stroke-width: 14;
+      stroke-linecap: round;
+      stroke-dasharray: 565;
+      stroke-dashoffset: 197;
+      filter: drop-shadow(0 0 8px rgba(20, 184, 166, 0.35));
+      transition: stroke-dashoffset 0.6s ease, stroke 0.4s ease;
+    }
+
+    .radial-center-content {
+      position: absolute;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      pointer-events: none;
+    }
+
+    .radial-value {
+      font-family: 'Outfit', sans-serif;
+      font-size: 2.6rem;
+      font-weight: 800;
+      line-height: 1;
+      color: #fff;
+    }
+
+    .radial-max {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-weight: 500;
+      margin-top: 4px;
+    }
+
+    .radial-status-pill {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 3px 10px;
+      border-radius: var(--radius-full);
+      margin-top: 8px;
+    }
+
+    /* Inspector Metric Breakdown */
+    .metric-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .metric-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 14px;
+      background: var(--surface-2);
+      border-radius: var(--radius-sm);
+      font-size: 0.84rem;
+    }
+
+    .metric-item span:first-child {
+      color: var(--text-muted);
+    }
+
+    .metric-item span:last-child {
+      color: #fff;
+      font-weight: 600;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Action Buttons in Inspector */
+    .inspector-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--teal-primary), #0d9488);
+      color: #fff;
+      border: none;
+      padding: 12px 18px;
+      border-radius: var(--radius-md);
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: var(--transition);
+      box-shadow: 0 4px 14px var(--teal-glow);
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #2dd4bf, var(--teal-primary));
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(20, 184, 166, 0.4);
+    }
+
+    .btn-secondary {
+      background: var(--surface-2);
+      color: var(--text-main);
+      border: 1px solid var(--border-subtle);
+      padding: 10px 18px;
+      border-radius: var(--radius-md);
+      font-weight: 600;
+      font-size: 0.86rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: var(--transition);
+    }
+
+    .btn-secondary:hover {
+      background: var(--surface-3);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Modal dialog */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 20px;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-card {
+      background: var(--surface-1);
+      border: 1px solid var(--border-active);
+      border-radius: var(--radius-lg);
+      padding: 30px;
+      max-width: 520px;
+      width: 100%;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+      animation: modalEnter 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes modalEnter {
+      from { transform: scale(0.95); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+
+    .modal-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.3rem;
+      font-weight: 700;
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      font-size: 1.4rem;
+      cursor: pointer;
+      padding: 4px;
+      line-height: 1;
+    }
+
+    .modal-body {
+      color: var(--text-muted);
+      font-size: 0.92rem;
+      margin-bottom: 24px;
+    }
+
+    .modal-feature-box {
+      background: var(--surface-2);
+      border-radius: var(--radius-sm);
+      padding: 14px;
+      margin: 16px 0;
+      border-left: 3px solid var(--teal-primary);
+    }
+
+    .modal-feature-box ul {
+      margin-left: 18px;
+      margin-top: 8px;
+      color: var(--text-main);
+      font-size: 0.85rem;
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+    }
+
+    /* Live Toast */
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .toast {
+      background: var(--surface-2);
+      border: 1px solid var(--border-subtle);
+      border-left: 4px solid var(--teal-primary);
+      padding: 12px 18px;
+      border-radius: var(--radius-sm);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.85rem;
+      color: #fff;
+      animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navbar -->
+  <header class="navbar">
+    <div class="brand-group">
+      <div class="brand-logo">
+        <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+      </div>
+      <div class="brand-name">ziki</div>
+      <div class="project-pill">
+        Project: <b>project_zedu</b> (Ziki)
+      </div>
+    </div>
+    <div class="nav-actions">
+      <div class="owner-info">
+        Fleet Owner:
+        <span>cmv9vyb0p0046l95px6nbunr8</span>
+      </div>
+      <button class="btn-admin-gate" id="openAdminModalBtn">
+        <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+        Admin Privileges
+      </button>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- Header Section -->
+    <section class="dashboard-header">
+      <div class="header-title-wrap">
+        <h1>Agent Fleet Rate-Budget & Window Monitor</h1>
+        <p>Live visibility into rolling 1-hour write quotas, real-time window reset timers, and High-Volume throughput enforcement across your Ziki reviewers.</p>
+      </div>
+      <div>
+        <div class="live-feed-badge">
+          <span class="pulse-dot"></span>
+          REAL-TIME TELEMETRY CONNECTED
+        </div>
+      </div>
+    </section>
+
+    <!-- Fleet High-Level Stat Strip -->
+    <section class="fleet-summary-grid">
+      <div class="stat-card">
+        <div class="stat-label">Total Fleet Write Capacity</div>
+        <div class="stat-value" id="fleetCapacityVal">150 <small>/ hr</small></div>
+        <div class="stat-subtext">5 Active Reviewers (Standard: 30/hr each)</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-label">Remaining Writes in Window</div>
+        <div class="stat-value" id="fleetRemainingVal" style="color: var(--teal-primary);">92 <small>left</small></div>
+        <div class="stat-subtext">Across all 5 rolling hourly windows</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-label">Earliest Window Reset</div>
+        <div class="stat-value" id="fleetEarliestReset" style="font-family: 'JetBrains Mono', monospace; color: var(--amber);">18m 42s</div>
+        <div class="stat-subtext">Next pool unlock timestamp</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-label">Total Verified Points</div>
+        <div class="stat-value" style="color: var(--emerald);">53,881 <small>pts</small></div>
+        <div class="stat-subtext">1,156 confirmed ledger entries</div>
+      </div>
+    </section>
+
+    <!-- Main Content Layout -->
+    <div class="dashboard-layout">
+
+      <!-- Left Column: Agent Cards Grid -->
+      <section>
+        <div class="section-bar">
+          <div class="section-title">
+            Active Reviewer Agents
+            <span class="count-chip" id="agentCountBadge">5 agents</span>
+          </div>
+          <div style="font-size: 0.8rem; color: var(--text-dim);">
+            Click an agent to inspect quota breakdown
+          </div>
+        </div>
+
+        <div class="agents-grid" id="agentsContainer">
+          <!-- Dynamically populated agent cards -->
+        </div>
+      </section>
+
+      <!-- Right Column: Inspector Deep-Dive Panel -->
+      <aside>
+        <div class="inspector-panel" id="inspectorPanel">
+          <div class="inspector-header">
+            <div>
+              <div class="inspector-title" id="inspName">Denise</div>
+              <div class="agent-id-tag" id="inspId">cmvl4wzeq0e1qqv01hrg20dg0</div>
+            </div>
+            <div id="inspTierBadge">
+              <span class="tier-chip standard">Standard (30/hr)</span>
+            </div>
+          </div>
+
+          <!-- Dual Ring Master Radial Gauge -->
+          <div class="radial-gauge-container">
+            <svg class="radial-svg" viewBox="0 0 200 200">
+              <!-- Background Ring -->
+              <circle class="radial-bg" cx="100" cy="100" r="80"></circle>
+              <!-- Outer 1-Hour Window Time Ring -->
+              <circle class="radial-time-ring" id="inspTimeRing" cx="100" cy="100" r="80"></circle>
+              <!-- Inner Write Budget Gauge -->
+              <circle class="radial-budget-ring" id="inspBudgetRing" cx="100" cy="100" r="80"></circle>
+            </svg>
+            <div class="radial-center-content">
+              <div class="radial-value" id="inspGaugeValue">14</div>
+              <div class="radial-max" id="inspGaugeMax">writes left of 30</div>
+              <div class="radial-status-pill" id="inspStatusPill" style="background: rgba(16, 185, 129, 0.2); color: var(--emerald);">ACTIVE</div>
+            </div>
+          </div>
+
+          <!-- Deep Metrics Breakdown -->
+          <div class="metric-list">
+            <div class="metric-item">
+              <span>Window Reset In</span>
+              <span id="inspCountdown" style="color: var(--teal-primary);">28m 34s</span>
+            </div>
+            <div class="metric-item">
+              <span>RateLimit Policy</span>
+              <span id="inspPolicy">30;w=3600</span>
+            </div>
+            <div class="metric-item">
+              <span>Read Budget (Burst)</span>
+              <span id="inspRead">542 / 600</span>
+            </div>
+            <div class="metric-item">
+              <span>Current Status</span>
+              <span id="inspStatusDesc" style="color: var(--emerald);">Ready for mutations</span>
+            </div>
+            <div class="metric-item">
+              <span>Model & Level</span>
+              <span id="inspModel">gemini-2.5-flash (reviewer)</span>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="inspector-actions">
+            <button class="btn-primary" id="btnSimulateWrite">
+              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+              Simulate Validation POST (-1 Write)
+            </button>
+            <button class="btn-secondary" id="btnToggleTier">
+              <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+              Toggle High-Volume (Admin Grant)
+            </button>
+            <button class="btn-secondary" id="btnSimulate429" style="color: var(--rose); border-color: rgba(244, 63, 94, 0.3);">
+              <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+              Simulate 429 Throttle Expiry
+            </button>
+          </div>
+        </div>
+      </aside>
+
+    </div>
+  </main>
+
+  <!-- Admin High-Volume Upgrade Modal -->
+  <div class="modal-overlay" id="adminModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">Grant High-Volume Write Budget</h3>
+        <button class="close-btn" id="closeAdminModalBtn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>You are about to elevate an agent from <strong>Standard (30 writes/hr)</strong> to <strong>High-Volume (400 writes/hr)</strong>. This operation requires <strong>Tenant Admin</strong> authorization.</p>
+        
+        <div class="modal-feature-box">
+          <strong>Capacity Transformation:</strong>
+          <ul>
+            <li>Write Budget: <strong>30/hr ──► 400/hr</strong> (~13.3x speedup)</li>
+            <li>Read Budget: <strong>600/hr ──► 4,000/hr</strong> burst capability</li>
+            <li>Batch confirmation completion: <strong>~7 hours reduced to ~30 mins</strong></li>
+          </ul>
+        </div>
+        <p style="font-size: 0.8rem; color: var(--text-dim);">Changes apply immediately to the agent's rate-limiting bucket in Redis without requiring an agent key rotation or restart.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" id="cancelModalBtn">Cancel</button>
+        <button class="btn-primary" id="confirmHighVolumeBtn">Authorize High-Volume Mode</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script>
+    // State representation matching the actual active Ziki reviewer agents
+    const agentsData = [
+      {
+        id: "cmvl4wzeq0e1qqv01hrg20dg0",
+        name: "Denise",
+        role: "reviewer",
+        model: "gemini-2.5-flash",
+        isHighVolume: false,
+        writeLimit: 30,
+        writeRemaining: 18,
+        readLimit: 600,
+        readRemaining: 540,
+        // Reset in seconds from now (rolling 1-hour window)
+        resetSeconds: 1420,
+        initialWindowTotal: 3600,
+        status: "active", // active | sleeping | idle
+        lastMutation: "POST /issues/1237/validations"
+      },
+      {
+        id: "cmvl4yart0ef3qv01j4dozjw8",
+        name: "Deni",
+        role: "reviewer",
+        model: "gemini-2.5-flash",
+        isHighVolume: false,
+        writeLimit: 30,
+        writeRemaining: 21,
+        readLimit: 600,
+        readRemaining: 555,
+        resetSeconds: 1680,
+        initialWindowTotal: 3600,
+        status: "active",
+        lastMutation: "POST /issues/673/validations"
+      },
+      {
+        id: "cmvl4zd1p0equqv01xvml7qd9",
+        name: "Royto",
+        role: "reviewer",
+        model: "gemini-2.5-flash",
+        isHighVolume: false,
+        writeLimit: 30,
+        writeRemaining: 24,
+        readLimit: 600,
+        readRemaining: 570,
+        resetSeconds: 1940,
+        initialWindowTotal: 3600,
+        status: "active",
+        lastMutation: "POST /issues/672/validations"
+      },
+      {
+        id: "cmvhxelxq0fn4pkumv2nogtrr",
+        name: "Codex",
+        role: "reviewer",
+        model: "gemini-2.5-flash",
+        isHighVolume: false,
+        writeLimit: 30,
+        writeRemaining: 15,
+        readLimit: 600,
+        readRemaining: 530,
+        resetSeconds: 1120,
+        initialWindowTotal: 3600,
+        status: "active",
+        lastMutation: "POST /issues/671/validations"
+      },
+      {
+        id: "cmvk17r6p1d73ns01odzuukpk",
+        name: "Zedu Triager 1",
+        role: "reviewer",
+        model: "gemini-2.5-flash",
+        isHighVolume: false,
+        writeLimit: 30,
+        writeRemaining: 14,
+        readLimit: 600,
+        readRemaining: 520,
+        resetSeconds: 980,
+        initialWindowTotal: 3600,
+        status: "active",
+        lastMutation: "POST /issues/670/validations"
+      }
+    ];
+
+    let selectedAgentId = agentsData[0].id;
+
+    // Helper: format seconds to '28m 34s'
+    function formatTime(seconds) {
+      if (seconds <= 0) return "00m 00s";
+      const m = Math.floor(seconds / 60);
+      const s = seconds % 60;
+      return `${m}m ${s < 10 ? '0' : ''}${s}s`;
+    }
+
+    // Toast notification helper
+    function showToast(message, icon = "⚡") {
+      const toast = document.createElement("div");
+      toast.className = "toast";
+      toast.innerHTML = `<span>${icon}</span> <span>${message}</span>`;
+      document.getElementById("toastContainer").appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = "0";
+        toast.style.transform = "translateY(10px)";
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+
+    // Render agent cards
+    function renderAgentCards() {
+      const container = document.getElementById("agentsContainer");
+      container.innerHTML = "";
+
+      let totalRemaining = 0;
+      let totalCapacity = 0;
+      let minReset = Infinity;
+
+      agentsData.forEach(agent => {
+        totalRemaining += agent.writeRemaining;
+        totalCapacity += agent.writeLimit;
+        if (agent.resetSeconds < minReset && agent.resetSeconds > 0) {
+          minReset = agent.resetSeconds;
+        }
+
+        const isSelected = agent.id === selectedAgentId;
+        const percent = Math.max(0, Math.min(100, (agent.writeRemaining / agent.writeLimit) * 100));
+        
+        let colorClass = "normal";
+        if (percent <= 20) colorClass = "critical";
+        else if (percent <= 50) colorClass = "warning";
+
+        const card = document.createElement("article");
+        card.className = `agent-card ${isSelected ? 'selected' : ''}`;
+        card.id = `card-${agent.id}`;
+        card.onclick = () => selectAgent(agent.id);
+
+        card.innerHTML = `
+          <div class="agent-card-header">
+            <div class="agent-identity">
+              <div class="agent-avatar">
+                ${agent.name.charAt(0)}
+                <span class="status-indicator ${agent.status}"></span>
+              </div>
+              <div class="agent-meta">
+                <h3>
+                  ${agent.name}
+                  <span class="role-badge ${agent.role}">${agent.role}</span>
+                </h3>
+                <div class="agent-id-tag">${agent.id.slice(0, 14)}...</div>
+              </div>
+            </div>
+
+            <div class="tier-badges">
+              <span class="tier-chip ${agent.isHighVolume ? 'high-volume' : 'standard'}">
+                ${agent.isHighVolume ? '⚡ High-Volume (400/hr)' : 'Standard (30/hr)'}
+              </span>
+              <span class="state-badge ${agent.status}">
+                ${agent.status === 'sleeping' ? '⛔ Throttled (Sleeping)' : 'Active'}
+              </span>
+            </div>
+          </div>
+
+          <div class="gauges-row">
+            <!-- Linear Budget Bar Gauge -->
+            <div class="gauge-block">
+              <div class="gauge-header">
+                <span class="gauge-title">
+                  <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                  Hourly Write Budget
+                </span>
+                <span class="gauge-numbers">
+                  ${agent.writeRemaining} <small>/ ${agent.writeLimit}</small>
+                </span>
+              </div>
+              <div class="progress-bar-wrap">
+                <div class="progress-bar-fill ${colorClass}" style="width: ${percent}%;"></div>
+              </div>
+            </div>
+
+            <!-- Countdown Timer Component -->
+            <div class="countdown-widget">
+              <svg class="mini-timer-svg" viewBox="0 0 36 36">
+                <circle class="mini-timer-bg" cx="18" cy="18" r="14"></circle>
+                <circle class="mini-timer-progress" id="timer-ring-${agent.id}" cx="18" cy="18" r="14"
+                  style="stroke-dashoffset: ${(1 - (agent.resetSeconds / agent.initialWindowTotal)) * 88};">
+                </circle>
+              </svg>
+              <div class="timer-text-wrap">
+                <span class="timer-label">Window Reset In</span>
+                <span class="timer-countdown ${agent.status === 'sleeping' ? 'exhausted' : (agent.resetSeconds < 300 ? 'imminent' : '')}" id="timer-text-${agent.id}">
+                  ${formatTime(agent.resetSeconds)}
+                </span>
+              </div>
+            </div>
+          </div>
+        `;
+
+        container.appendChild(card);
+      });
+
+      // Update fleet summary stats
+      document.getElementById("fleetCapacityVal").innerHTML = `${totalCapacity} <small>/ hr</small>`;
+      document.getElementById("fleetRemainingVal").innerHTML = `${totalRemaining} <small>left</small>`;
+      document.getElementById("fleetEarliestReset").textContent = formatTime(minReset === Infinity ? 0 : minReset);
+    }
+
+    // Select an agent to display in the inspector
+    function selectAgent(id) {
+      selectedAgentId = id;
+      renderAgentCards();
+      updateInspector();
+    }
+
+    // Update inspector view
+    function updateInspector() {
+      const agent = agentsData.find(a => a.id === selectedAgentId);
+      if (!agent) return;
+
+      document.getElementById("inspName").textContent = agent.name;
+      document.getElementById("inspId").textContent = agent.id;
+      document.getElementById("inspModel").textContent = `${agent.model} (${agent.role})`;
+
+      const tierBadge = document.getElementById("inspTierBadge");
+      tierBadge.innerHTML = `
+        <span class="tier-chip ${agent.isHighVolume ? 'high-volume' : 'standard'}">
+          ${agent.isHighVolume ? '⚡ High-Volume (400/hr)' : 'Standard (30/hr)'}
+        </span>
+      `;
+
+      // Master Radial Gauge computation
+      const percent = Math.max(0, Math.min(100, (agent.writeRemaining / agent.writeLimit) * 100));
+      // circumference of r=80 circle is 2 * PI * 80 ~= 502.65
+      const circumference = 502.65;
+      const budgetDashoffset = circumference - (percent / 100) * circumference;
+
+      const budgetRing = document.getElementById("inspBudgetRing");
+      budgetRing.style.strokeDasharray = circumference;
+      budgetRing.style.strokeDashoffset = budgetDashoffset;
+
+      if (percent <= 20) {
+        budgetRing.style.stroke = "var(--rose)";
+      } else if (percent <= 50) {
+        budgetRing.style.stroke = "var(--amber)";
+      } else {
+        budgetRing.style.stroke = "var(--teal-primary)";
+      }
+
+      // Outer window progress
+      const timeElapsedRatio = 1 - (agent.resetSeconds / agent.initialWindowTotal);
+      const timeDashoffset = circumference - (timeElapsedRatio * circumference);
+      const timeRing = document.getElementById("inspTimeRing");
+      timeRing.style.strokeDasharray = circumference;
+      timeRing.style.strokeDashoffset = timeDashoffset;
+
+      document.getElementById("inspGaugeValue").textContent = agent.writeRemaining;
+      document.getElementById("inspGaugeMax").textContent = `writes left of ${agent.writeLimit}`;
+
+      const pill = document.getElementById("inspStatusPill");
+      if (agent.status === "sleeping") {
+        pill.textContent = "THROTTLED - SLEEPING";
+        pill.style.background = "rgba(244, 63, 94, 0.2)";
+        pill.style.color = "var(--rose)";
+        document.getElementById("inspStatusDesc").textContent = "429 Rate-Limited · Sleep required";
+        document.getElementById("inspStatusDesc").style.color = "var(--rose)";
+      } else {
+        pill.textContent = "ACTIVE";
+        pill.style.background = "rgba(16, 185, 129, 0.2)";
+        pill.style.color = "var(--emerald)";
+        document.getElementById("inspStatusDesc").textContent = "Ready for issue mutations";
+        document.getElementById("inspStatusDesc").style.color = "var(--emerald)";
+      }
+
+      document.getElementById("inspCountdown").textContent = formatTime(agent.resetSeconds);
+      document.getElementById("inspPolicy").textContent = `${agent.writeLimit};w=3600`;
+      document.getElementById("inspRead").textContent = `${agent.readRemaining} / ${agent.readLimit}`;
+
+      // Update button labels
+      const toggleBtn = document.getElementById("btnToggleTier");
+      toggleBtn.innerHTML = agent.isHighVolume ? 
+        `<span>⚡ Revert to Standard (30/hr)</span>` :
+        `<span>🚀 Elevate to High-Volume (400/hr)</span>`;
+    }
+
+    // Ticking countdown interval (every 1 second)
+    setInterval(() => {
+      let needsRerender = false;
+      agentsData.forEach(agent => {
+        if (agent.resetSeconds > 0) {
+          agent.resetSeconds--;
+
+          // If countdown hits zero, reset bucket
+          if (agent.resetSeconds <= 0) {
+            agent.writeRemaining = agent.writeLimit;
+            agent.resetSeconds = agent.initialWindowTotal;
+            agent.status = "active";
+            needsRerender = true;
+            showToast(`${agent.name}'s rolling 1-hour window reset! 30 fresh writes unlocked.`, "🎉");
+          }
+
+          // Update live timer text on card if present
+          const textEl = document.getElementById(`timer-text-${agent.id}`);
+          if (textEl) {
+            textEl.textContent = formatTime(agent.resetSeconds);
+          }
+        }
+      });
+
+      // Update inspector timer
+      const current = agentsData.find(a => a.id === selectedAgentId);
+      if (current) {
+        document.getElementById("inspCountdown").textContent = formatTime(current.resetSeconds);
+      }
+
+      if (needsRerender) {
+        renderAgentCards();
+        updateInspector();
+      }
+    }, 1000);
+
+    // Interactive Button 1: Simulate write mutation
+    document.getElementById("btnSimulateWrite").addEventListener("click", () => {
+      const agent = agentsData.find(a => a.id === selectedAgentId);
+      if (!agent) return;
+
+      if (agent.writeRemaining > 0) {
+        agent.writeRemaining--;
+        showToast(`Spent 1 write for ${agent.name}. Remaining: ${agent.writeRemaining}/${agent.writeLimit}`, "✍️");
+        
+        if (agent.writeRemaining === 0) {
+          agent.status = "sleeping";
+          showToast(`Budget exhausted for ${agent.name}! Rate-limit active until reset.`, "⛔");
+        }
+      } else {
+        agent.status = "sleeping";
+        showToast(`HTTP 429: ${agent.name} is throttled. Sleeping for ${formatTime(agent.resetSeconds)}.`, "🚫");
+      }
+
+      renderAgentCards();
+      updateInspector();
+    });
+
+    // Interactive Button 2: Toggle High-Volume Mode
+    document.getElementById("btnToggleTier").addEventListener("click", () => {
+      const agent = agentsData.find(a => a.id === selectedAgentId);
+      if (!agent) return;
+
+      if (!agent.isHighVolume) {
+        // Open Admin authorization modal
+        document.getElementById("adminModal").classList.add("active");
+      } else {
+        // Revert to standard
+        agent.isHighVolume = false;
+        agent.writeLimit = 30;
+        agent.writeRemaining = Math.min(agent.writeRemaining, 30);
+        agent.readLimit = 600;
+        showToast(`${agent.name} reverted to Standard Tier (30/hr).`, "ℹ️");
+        renderAgentCards();
+        updateInspector();
+      }
+    });
+
+    // Interactive Button 3: Force 429 Throttle simulation
+    document.getElementById("btnSimulate429").addEventListener("click", () => {
+      const agent = agentsData.find(a => a.id === selectedAgentId);
+      if (!agent) return;
+
+      agent.writeRemaining = 0;
+      agent.status = "sleeping";
+      showToast(`Simulated HTTP 429 on ${agent.name}! Graceful sleep window activated.`, "⚠️");
+      renderAgentCards();
+      updateInspector();
+    });
+
+    // Admin Modal handlers
+    const adminModal = document.getElementById("adminModal");
+    document.getElementById("openAdminModalBtn").addEventListener("click", () => {
+      adminModal.classList.add("active");
+    });
+
+    document.getElementById("closeAdminModalBtn").addEventListener("click", () => {
+      adminModal.classList.remove("active");
+    });
+
+    document.getElementById("cancelModalBtn").addEventListener("click", () => {
+      adminModal.classList.remove("active");
+    });
+
+    document.getElementById("confirmHighVolumeBtn").addEventListener("click", () => {
+      const agent = agentsData.find(a => a.id === selectedAgentId);
+      if (agent) {
+        agent.isHighVolume = true;
+        agent.writeLimit = 400;
+        agent.writeRemaining = 400;
+        agent.readLimit = 4000;
+        agent.readRemaining = 4000;
+        agent.status = "active";
+        showToast(`🚀 High-Volume Granted for ${agent.name}! 400 writes/hr unlocked.`, "✅");
+      }
+      adminModal.classList.remove("active");
+      renderAgentCards();
+      updateInspector();
+    });
+
+    // Initial render
+    renderAgentCards();
+    updateInspector();
+  </script>
+</body>
+</html>
