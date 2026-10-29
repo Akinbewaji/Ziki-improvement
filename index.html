@@ -154,6 +154,111 @@
       gap: 6px;
     }
 
+    
+    /* ===== ZIKI PULSE ===== */
+    .ziki-pulse-wrapper {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      padding: 6px 14px;
+      border-radius: var(--radius-full);
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: var(--transition);
+      user-select: none;
+    }
+    .ziki-pulse-wrapper:hover {
+      background: rgba(255, 255, 255, 0.09);
+      border-color: rgba(255, 255, 255, 0.18);
+    }
+    .ziki-pulse-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--emerald);
+      flex-shrink: 0;
+      transition: background 0.4s ease;
+      animation: zikiPulseRing 1.8s infinite;
+    }
+    .ziki-pulse-dot.thinking {
+      background: #a855f7;
+      animation: zikiPulseRing 0.9s infinite;
+    }
+    .ziki-pulse-dot.busy {
+      background: #3b82f6;
+      animation: zikiPulseRing 0.7s infinite;
+    }
+    .ziki-pulse-dot.waiting {
+      background: var(--amber);
+      animation: zikiPulseRing 2.5s infinite;
+    }
+    @keyframes zikiPulseRing {
+      0%   { box-shadow: 0 0 0 0 currentColor; }
+      60%  { box-shadow: 0 0 0 5px transparent; }
+      100% { box-shadow: 0 0 0 0 transparent; }
+    }
+    .ziki-pulse-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+    .ziki-pulse-chevron {
+      font-size: 10px;
+      color: var(--text-dim);
+      transition: transform 0.2s ease;
+    }
+    .ziki-pulse-wrapper.open .ziki-pulse-chevron {
+      transform: rotate(180deg);
+    }
+    .ziki-pulse-card {
+      display: none;
+      position: absolute;
+      top: calc(100% + 10px);
+      right: 0;
+      min-width: 250px;
+      background: var(--surface-1);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255,255,255,0.04);
+      z-index: 200;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .ziki-pulse-card.visible {
+      display: flex;
+    }
+    .ziki-pulse-card-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    .ziki-pulse-card-icon {
+      font-size: 17px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .ziki-pulse-card-title {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 3px;
+    }
+    .ziki-pulse-card-value {
+      font-size: 0.82rem;
+      color: var(--text-main);
+      font-weight: 500;
+    }
+    .ziki-pulse-divider {
+      height: 1px;
+      background: var(--border-subtle);
+      margin: 2px 0;
+    }
+
     .btn-admin-gate:hover {
       background: linear-gradient(135deg, rgba(99, 102, 241, 0.3), rgba(20, 184, 166, 0.3));
       border-color: #818cf8;
@@ -165,7 +270,7 @@
     .container {
       max-width: 1400px;
       margin: 0 auto;
-      padding: 32px 24px;
+      padding: 20px 24px;
     }
 
     /* Header Banner */
@@ -642,7 +747,7 @@
       background: var(--surface-1);
       border: 1px solid var(--border-subtle);
       border-radius: var(--radius-lg);
-      padding: 28px 24px;
+      padding: 20px;
       box-shadow: var(--shadow-card);
       position: sticky;
       top: 90px;
@@ -951,6 +1056,47 @@
       </div>
     </div>
     <div class="nav-actions">
+      <!-- ZIKI PULSE -->
+      <div class="ziki-pulse-wrapper" id="zikiPulse" onclick="toggleZikiPulse()">
+        <span class="ziki-pulse-dot" id="zikiPulseDot"></span>
+        <span class="ziki-pulse-label" id="zikiPulseLabel">Denise is ready</span>
+        <span class="ziki-pulse-chevron">?</span>
+
+        <div class="ziki-pulse-card" id="zikiPulseCard">
+          <div class="ziki-pulse-card-row">
+            <span class="ziki-pulse-card-icon">??</span>
+            <div>
+              <div class="ziki-pulse-card-title">Current Focus</div>
+              <div class="ziki-pulse-card-value" id="zikiPulseFocus">Waiting for your input</div>
+            </div>
+          </div>
+          <div class="ziki-pulse-divider"></div>
+          <div class="ziki-pulse-card-row">
+            <span class="ziki-pulse-card-icon">??</span>
+            <div>
+              <div class="ziki-pulse-card-title">Agent at Work</div>
+              <div class="ziki-pulse-card-value" id="pulseAgent">Denise</div>
+            </div>
+          </div>
+          <div class="ziki-pulse-divider"></div>
+          <div class="ziki-pulse-card-row">
+            <span class="ziki-pulse-card-icon">??</span>
+            <div>
+              <div class="ziki-pulse-card-title">Fleet Status</div>
+              <div class="ziki-pulse-card-value" id="zikiPulseFleet">5 agents monitored</div>
+            </div>
+          </div>
+          <div class="ziki-pulse-divider"></div>
+          <div class="ziki-pulse-card-row">
+            <span class="ziki-pulse-card-icon">??</span>
+            <div>
+              <div class="ziki-pulse-card-title">Session Started</div>
+              <div class="ziki-pulse-card-value" id="zikiPulseSession">�</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div class="owner-info">
         Fleet Owner:
         <span>cmv9vyb0p0046l95px6nbunr8</span>
@@ -965,45 +1111,26 @@
   <main class="container">
 
     <!-- Header Section -->
-    <section class="dashboard-header">
-      <div class="header-title-wrap">
-        <h1>Agent Fleet Rate-Budget & Window Monitor</h1>
-        <p>Live visibility into rolling 1-hour write quotas, real-time window reset timers, and High-Volume throughput enforcement across your Ziki reviewers.</p>
-      </div>
-      <div>
-        <div class="live-feed-badge">
-          <span class="pulse-dot"></span>
-          REAL-TIME TELEMETRY CONNECTED
-        </div>
-      </div>
-    </section>
+    
 
     <!-- Fleet High-Level Stat Strip -->
-    <section class="fleet-summary-grid">
-      <div class="stat-card">
-        <div class="stat-label">Total Fleet Write Capacity</div>
-        <div class="stat-value" id="fleetCapacityVal">150 <small>/ hr</small></div>
-        <div class="stat-subtext">5 Active Reviewers (Standard: 30/hr each)</div>
+    
+    <!-- Compact Fleet Summary -->
+    <div style="display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap;">
+      <div style="flex: 1; min-width: 180px; background: var(--surface-1); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 12px 18px; display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 0.78rem; color: var(--text-muted); font-weight: 600;">FLEET REMAINING</span>
+        <span id="fleetRemainingVal" style="font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 700; color: var(--teal-primary);">92 <small style="font-size: 0.75rem; color: var(--text-dim);">writes</small></span>
       </div>
+      <div style="flex: 1; min-width: 180px; background: var(--surface-1); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 12px 18px; display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 0.78rem; color: var(--text-muted); font-weight: 600;">NEXT RESET</span>
+        <span id="fleetEarliestReset" style="font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; font-weight: 700; color: var(--amber);">18m 42s</span>
+      </div>
+      <div style="flex: 1; min-width: 180px; background: var(--surface-1); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 12px 18px; display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 0.78rem; color: var(--text-muted); font-weight: 600;">CAPACITY</span>
+        <span id="fleetCapacityVal" style="font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 700; color: #fff;">150 <small style="font-size: 0.75rem; color: var(--text-dim);">/ hr</small></span>
+      </div>
+    </div>
 
-      <div class="stat-card">
-        <div class="stat-label">Remaining Writes in Window</div>
-        <div class="stat-value" id="fleetRemainingVal" style="color: var(--teal-primary);">92 <small>left</small></div>
-        <div class="stat-subtext">Across all 5 rolling hourly windows</div>
-      </div>
-
-      <div class="stat-card">
-        <div class="stat-label">Earliest Window Reset</div>
-        <div class="stat-value" id="fleetEarliestReset" style="font-family: 'JetBrains Mono', monospace; color: var(--amber);">18m 42s</div>
-        <div class="stat-subtext">Next pool unlock timestamp</div>
-      </div>
-
-      <div class="stat-card">
-        <div class="stat-label">Total Verified Points</div>
-        <div class="stat-value" style="color: var(--emerald);">53,881 <small>pts</small></div>
-        <div class="stat-subtext">1,156 confirmed ledger entries</div>
-      </div>
-    </section>
 
     <!-- Main Content Layout -->
     <div class="dashboard-layout">
@@ -1335,6 +1462,11 @@
     // Select an agent to display in the inspector
     function selectAgent(id) {
       selectedAgentId = id;
+      const a = agentsData.find(x => x.id === id);
+      if (a) {
+        setZikiState("searching", `Inspecting ${a.name}'s quota breakdown`, a.name);
+        setTimeout(() => setZikiState("ready", `${a.name} � ${a.writeRemaining} writes left, resets in ${formatTime(a.resetSeconds)}`, a.name), 700);
+      }
       renderAgentCards();
       updateInspector();
     }
@@ -1532,6 +1664,77 @@
     // Initial render
     renderAgentCards();
     updateInspector();
+
+    // ===== ZIKI PULSE ENGINE =====
+    const ZIKI_STATES = {
+      ready:    { verb: "is ready",       cls: "",         focus: "Monitoring fleet health" },
+      thinking: { verb: "is thinking...", cls: "thinking", focus: "Reasoning through your request" },
+      searching:{ verb: "is searching...",cls: "busy",     focus: "Scanning agent data" },
+      waiting:  { verb: "needs your call",cls: "waiting",  focus: "Awaiting your decision" },
+      writing:  { verb: "is writing...",  cls: "busy",     focus: "Drafting response" },
+    };
+
+    document.getElementById("zikiPulseSession").textContent =
+      new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
+    function syncZikiFleetStatus() {
+      const active = agentsData.filter(a => a.status === "active").length;
+      const sleeping = agentsData.filter(a => a.status === "sleeping").length;
+      const el = document.getElementById("zikiPulseFleet");
+      if (el) el.textContent = `${active} active � ${sleeping} sleeping`;
+    }
+    syncZikiFleetStatus();
+
+    function setZikiState(name, focus = null, agentName = null) {
+      const s = ZIKI_STATES[name] || ZIKI_STATES.ready;
+      const cur = agentsData.find(x => x.id === selectedAgentId);
+      const displayName = agentName || (cur ? cur.name : "Ziki");
+      const dot = document.getElementById("zikiPulseDot");
+      const label = document.getElementById("zikiPulseLabel");
+      const focusEl = document.getElementById("zikiPulseFocus");
+      const agentEl = document.getElementById("pulseAgent");
+      if (!dot) return;
+      dot.className = "ziki-pulse-dot " + s.cls;
+      label.textContent = `${displayName} ${s.verb}`;
+      focusEl.textContent = focus || s.focus;
+      if (agentEl) agentEl.textContent = displayName;
+      syncZikiFleetStatus();
+    }
+
+    function toggleZikiPulse() {
+      const wrapper = document.getElementById("zikiPulse");
+      const card = document.getElementById("zikiPulseCard");
+      wrapper.classList.toggle("open");
+      card.classList.toggle("visible");
+      syncZikiFleetStatus();
+
+      if (card.classList.contains("visible")) {
+        setTimeout(() => {
+          document.addEventListener("click", closeZikiPulseOutside);
+        }, 10);
+      }
+    }
+
+    function closeZikiPulseOutside(e) {
+      const wrapper = document.getElementById("zikiPulse");
+      if (!wrapper.contains(e.target)) {
+        wrapper.classList.remove("open");
+        document.getElementById("zikiPulseCard").classList.remove("visible");
+        document.removeEventListener("click", closeZikiPulseOutside);
+      }
+    }
+
+    setInterval(syncZikiFleetStatus, 5000);
+
+    // Boot demo
+    const firstAgent = agentsData[0].name;
+    [
+      { s: "thinking",  f: `Analysing ${firstAgent}'s rate budget...`,       t: 1000 },
+      { s: "searching", f: `Checking ${firstAgent}'s rolling window timer...`, t: 2400 },
+      { s: "writing",   f: "Syncing telemetry feed...",                   t: 3800 },
+      { s: "ready",     f: `${firstAgent} � ${agentsData[0].writeRemaining} writes left`,  t: 5200 },
+    ].forEach(({s, f, t}) => setTimeout(() => setZikiState(s, f, firstAgent), t));
+
   </script>
 </body>
 </html>
