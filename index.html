@@ -1040,6 +1040,137 @@
       from { transform: translateX(100%); opacity: 0; }
       to { transform: translateX(0); opacity: 1; }
     }
+
+    /* Light Theme Overrides */
+    [data-theme="light"] {
+      --bg-dark: #f8fafc;
+      --surface-1: #ffffff;
+      --surface-2: #f1f5f9;
+      --surface-3: #e2e8f0;
+      --border-subtle: rgba(0, 0, 0, 0.08);
+      --border-active: rgba(20, 184, 166, 0.45);
+      --text-main: #0f172a;
+      --text-muted: #475569;
+      --text-dim: #64748b;
+      --shadow-card: 0 4px 20px -2px rgba(0, 0, 0, 0.06), 0 0 1px 1px rgba(0, 0, 0, 0.05);
+    }
+
+    [data-theme="light"] body {
+      background-image: 
+        radial-gradient(circle at 15% 10%, rgba(20, 184, 166, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 85% 30%, rgba(99, 102, 241, 0.07) 0%, transparent 45%),
+        linear-gradient(to bottom, #f8fafc, #f1f5f9);
+    }
+
+    [data-theme="light"] .navbar {
+      background: rgba(255, 255, 255, 0.85);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+    }
+
+    [data-theme="light"] .brand-name {
+      color: #0f172a;
+    }
+
+    [data-theme="light"] .project-pill {
+      background: var(--surface-2);
+      border-color: rgba(0, 0, 0, 0.08);
+    }
+
+    [data-theme="light"] .btn-theme-toggle {
+      background: var(--surface-2);
+      border: 1px solid var(--border-subtle);
+      color: #334155;
+    }
+    [data-theme="light"] .btn-theme-toggle:hover {
+      background: var(--surface-3);
+      border-color: rgba(0, 0, 0, 0.15);
+      color: #0f172a;
+    }
+
+    [data-theme="light"] .btn-admin-gate {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(20, 184, 166, 0.1));
+      border: 1px solid rgba(99, 102, 241, 0.35);
+      color: #4338ca;
+    }
+
+    [data-theme="light"] .ziki-pulse-wrapper {
+      background: rgba(0, 0, 0, 0.04);
+      border: 1px solid rgba(0, 0, 0, 0.08);
+    }
+    [data-theme="light"] .ziki-pulse-wrapper:hover {
+      background: rgba(0, 0, 0, 0.08);
+      border-color: rgba(0, 0, 0, 0.14);
+    }
+    [data-theme="light"] .ziki-pulse-card {
+      background: #ffffff;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      box-shadow: 0 16px 48px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.04);
+    }
+
+    [data-theme="light"] .agent-card.selected {
+      background: linear-gradient(145deg, #f0fdfa 0%, #ffffff 100%);
+      box-shadow: 0 0 20px rgba(20, 184, 166, 0.18), var(--shadow-card);
+    }
+
+    [data-theme="light"] .gauges-row {
+      background: rgba(0, 0, 0, 0.03);
+      border: 1px solid rgba(0, 0, 0, 0.04);
+    }
+
+    [data-theme="light"] .countdown-widget {
+      background: rgba(255, 255, 255, 0.85);
+      border: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    [data-theme="light"] .stat-value,
+    [data-theme="light"] .radial-value,
+    [data-theme="light"] .inspector-title,
+    [data-theme="light"] .agent-meta h3,
+    [data-theme="light"] .gauge-numbers,
+    [data-theme="light"] .timer-countdown,
+    [data-theme="light"] .metric-item span:last-child {
+      color: #0f172a;
+    }
+
+    [data-theme="light"] .radial-time-ring {
+      stroke: rgba(99, 102, 241, 0.15);
+    }
+
+    [data-theme="light"] .modal-card {
+      background: #ffffff;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    }
+
+    /* Theme Toggle Button Style */
+    .btn-theme-toggle {
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-sm);
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border-subtle);
+      color: #f1f5f9;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: var(--transition);
+      padding: 0;
+      flex-shrink: 0;
+    }
+    .btn-theme-toggle:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.18);
+      transform: translateY(-1px);
+    }
+    .btn-theme-toggle svg {
+      width: 18px;
+      height: 18px;
+      transition: transform 0.3s ease;
+    }
+    .btn-theme-toggle:active svg {
+      transform: scale(0.9) rotate(20deg);
+    }
+
   </style>
 </head>
 <body>
@@ -1101,6 +1232,25 @@
         Fleet Owner:
         <span>cmv9vyb0p0046l95px6nbunr8</span>
       </div>
+      
+      <!-- Dark / Light Theme Toggle -->
+      <button class="btn-theme-toggle" id="themeToggleBtn" title="Toggle theme (Dark / Light)" aria-label="Toggle theme">
+        <svg id="themeSunIcon" style="display:none;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="5"></circle>
+          <line x1="12" y1="1" x2="12" y2="3"></line>
+          <line x1="12" y1="21" x2="12" y2="23"></line>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+          <line x1="1" y1="12" x2="3" y2="12"></line>
+          <line x1="21" y1="12" x2="23" y2="12"></line>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+        </svg>
+        <svg id="themeMoonIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+      </button>
+
       <button class="btn-admin-gate" id="openAdminModalBtn">
         <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
         Admin Privileges
@@ -1734,6 +1884,39 @@
       { s: "writing",   f: "Syncing telemetry feed...",                   t: 3800 },
       { s: "ready",     f: `${firstAgent} � ${agentsData[0].writeRemaining} writes left`,  t: 5200 },
     ].forEach(({s, f, t}) => setTimeout(() => setZikiState(s, f, firstAgent), t));
+
+
+    // ===== THEME TOGGLE (DARK / LIGHT) =====
+    const themeToggleBtn = document.getElementById("themeToggleBtn");
+    const sunIcon = document.getElementById("themeSunIcon");
+    const moonIcon = document.getElementById("themeMoonIcon");
+
+    function applyTheme(theme) {
+      document.documentElement.setAttribute("data-theme", theme);
+      if (theme === "light") {
+        sunIcon.style.display = "block";
+        moonIcon.style.display = "none";
+        themeToggleBtn.setAttribute("title", "Switch to Dark theme");
+      } else {
+        sunIcon.style.display = "none";
+        moonIcon.style.display = "block";
+        themeToggleBtn.setAttribute("title", "Switch to Light theme");
+      }
+      localStorage.setItem("ziki-theme", theme);
+    }
+
+    // Initialize from localStorage or system preference
+    const savedTheme = localStorage.getItem("ziki-theme");
+    const prefersLight = window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches;
+    const initialTheme = savedTheme || (prefersLight ? "light" : "dark");
+    applyTheme(initialTheme);
+
+    themeToggleBtn.addEventListener("click", () => {
+      const currentTheme = document.documentElement.getAttribute("data-theme") || "dark";
+      const nextTheme = currentTheme === "dark" ? "light" : "dark";
+      applyTheme(nextTheme);
+      showToast(nextTheme === "light" ? "Switched to Light theme" : "Switched to Dark theme", nextTheme === "light" ? "??" : "??");
+    });
 
   </script>
 </body>
